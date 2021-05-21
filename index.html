@@ -20,10 +20,11 @@
     function click_event(event){
       var x = event.pageX - cLeft,
           y = event.pageY - cTop;
-      console.log(x,y);
+
       elements.forEach(function(element){
         if (y > element.top && y < element.bottom && x > element.left && x < element.right){
-          alert("Box was clicked!");
+          element.int_function();
+          draw_information();
         }
       });
     }
@@ -31,26 +32,89 @@
     // Event handlers
     canvas.addEventListener('click', click_event, false);
 
-    // Hit boxes
-    elements.push({
-      top: 300,
-      left: 350,
-      bottom: 400,
-      right: 450
-    })
+    // Game data
+    var food = 20,
+        houses = 4,
+        people = 8,
+        dying = false;
+        dead = false;
 
-    function drawElements(element){
-
+    // interface functions
+    function hunt(){
+      food = food + Math.floor(people/2);
     }
+
+    function build(){
+      houses++;
+    }
+
+    function gather(){
+      food = food + Math.floor(people/4);
+    }
+
+    function updateResources(){
+      // If there is space, increase the number of people
+      if (Math.floor(people/2) < houses && food > people){
+        people++;
+      }
+      // Each person consumers 1 food
+      food = food - people;
+      // If there isn't enough food people start to die
+      if ( food <= 0 ){
+        food = 0;
+        dying = true;
+      } else {
+        dying = false;
+      }
+      // One person dies per tick while dying is true
+      if ( dying == true ) {
+        people -= Math.floor(people*0.1) + 1;
+      }
+      if (people <= 0 ){
+        dead = true;
+      }
+      draw_information();
+    }
+    // Draw information area
+    function draw_information(){
+      ctx.clearRect(0, 0, 800, 400);
+      ctx.font = "20px Arial";
+      ctx.textAlign = "left";
+      ctx.fillText("Food: " + food, 50, 50);
+      ctx.fillText("Houses: " + houses, 50, 75);
+      ctx.fillText("People: " + people, 50, 100);
+      if (dead == true){
+        ctx.textAlign = "center";
+        ctx.font = "30px Arial";
+        ctx.fillText("Everyone is DEAD!", 400, 300);
+        clearInterval(gameTimer);
+      }
+      else if (dying == true) {
+        ctx.fillText("People are dying!", 200, 100);
+      }
+    }
+
+    // Hit boxes
+    elements.push(
+      { top: 400, left: 150, bottom: 500, right: 250, msg_text: "Hunt", int_function:hunt },
+      { top: 400, left: 350, bottom: 500, right: 450, msg_text: "Build", int_function:build },
+      { top: 400, left: 550, bottom: 500, right: 650, msg_text: "Gather", int_function:gather }
+    )
+
+    // Draw hit boxes
     elements.forEach(function(element) {
       ctx.moveTo(element.left, element.top);
       ctx.lineTo(element.right, element.top);
       ctx.lineTo(element.right, element.bottom);
       ctx.lineTo(element.left, element.bottom);
       ctx.lineTo(element.left, element.top);
-      ctx.stroke();
+      ctx.textAlign = "center";
+      ctx.fillText(element.msg_text, ((element.left+element.right)/2), (element.top +element.bottom)/2);
     });
-    // Buy button
+
+    ctx.stroke();
+    draw_information();
+    var gameTimer = setInterval(updateResources, 1000);
 
   </script>
 
