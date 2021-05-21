@@ -10,24 +10,48 @@
   </div>
   <!-- Draw interface -->
   <script>
-    var e = document.getElementById("mainCanvas"),
-        eLeft = e.offsetLeft,
-        eTop = e.offsetTop,
-        ctx = e.getContext("2d");
+    var canvas = document.getElementById("mainCanvas"),
+        cLeft = canvas.offsetLeft,
+        cTop = canvas.offsetTop,
+        ctx = canvas.getContext("2d");
     var elements = [];
 
-    
+    // Event functions
+    function click_event(event){
+      var x = event.pageX - cLeft,
+          y = event.pageY - cTop;
+      console.log(x,y);
+      elements.forEach(function(element){
+        if (y > element.top && y < element.bottom && x > element.left && x < element.right){
+          alert("Box was clicked!");
+        }
+      });
+    }
 
-    e.addEventListener('click', function(event) {alert("canvas clicked")}, false);
+    // Event handlers
+    canvas.addEventListener('click', click_event, false);
 
+    // Hit boxes
+    elements.push({
+      top: 300,
+      left: 350,
+      bottom: 400,
+      right: 450
+    })
 
+    function drawElements(element){
+
+    }
+    elements.forEach(function(element) {
+      ctx.moveTo(element.left, element.top);
+      ctx.lineTo(element.right, element.top);
+      ctx.lineTo(element.right, element.bottom);
+      ctx.lineTo(element.left, element.bottom);
+      ctx.lineTo(element.left, element.top);
+      ctx.stroke();
+    });
     // Buy button
-    ctx.moveTo(350,300);
-    ctx.lineTo(450,300);
-    ctx.lineTo(450,350);
-    ctx.lineTo(350,350);
-    ctx.lineTo(350,300);
-    ctx.stroke();
+
   </script>
 
 </body>
