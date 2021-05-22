@@ -33,61 +33,62 @@
     canvas.addEventListener('click', click_event, false);
 
     // Game data
-    var food = 20,
-        houses = 4,
-        people = 8,
-        dying = false;
+    var gameData = { food:10, people:2, houses:0};
+    var dying = false;
         dead = false;
 
     // interface functions
     function hunt(){
-      food = food + Math.floor(people/2);
+      gameData.food = gameData.food + Math.floor(gameData.people/2);
     }
 
     function build(){
-      houses++;
+      gameData.houses++;
     }
 
     function gather(){
-      food = food + Math.floor(people/4);
+      gameData.food = gameData.food + Math.floor(gameData.people/4);
     }
 
     function updateResources(){
       // If there is space, increase the number of people
-      if (Math.floor(people/2) < houses && food > people){
-        people++;
+      if (Math.floor(gameData.people/2) < gameData.houses && gameData.food > gameData.people){
+        gameData.people++;
       }
-      // Each person consumers 1 food
-      food = food - people;
+
       // If there isn't enough food people start to die
-      if ( food <= 0 ){
-        food = 0;
+      if ( gameData.food <= 0 ){
+        gameData.food = 0;
         dying = true;
       } else {
+        // Each person consumers 1 food
+        gameData.food = gameData.food - gameData.people;
         dying = false;
       }
       // One person dies per tick while dying is true
       if ( dying == true ) {
-        people -= Math.floor(people*0.1) + 1;
-      }
-      if (people <= 0 ){
-        dead = true;
+        gameData.people -= Math.floor(gameData.people*0.1) + 1;
+        if (gameData.people <= 0 ){
+          dead = true;
+          gameData.people = 0
+          clearInterval(gameTimer);
+        }
       }
       draw_information();
     }
+
     // Draw information area
     function draw_information(){
       ctx.clearRect(0, 0, 800, 400);
       ctx.font = "20px Arial";
       ctx.textAlign = "left";
-      ctx.fillText("Food: " + food, 50, 50);
-      ctx.fillText("Houses: " + houses, 50, 75);
-      ctx.fillText("People: " + people, 50, 100);
+      ctx.fillText("Food: " + gameData.food, 50, 50);
+      ctx.fillText("Houses: " + gameData.houses, 50, 75);
+      ctx.fillText("People: " + gameData.people, 50, 100);
       if (dead == true){
         ctx.textAlign = "center";
         ctx.font = "30px Arial";
         ctx.fillText("Everyone is DEAD!", 400, 300);
-        clearInterval(gameTimer);
       }
       else if (dying == true) {
         ctx.fillText("People are dying!", 200, 100);
