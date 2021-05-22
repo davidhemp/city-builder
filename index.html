@@ -33,44 +33,90 @@
     canvas.addEventListener('click', click_event, false);
 
     // Game data
-    var gameData = { food:10, people:2, houses:0};
+    var gameData = { food:10, people:{ idle: 2 }, houses:0 };
+    var foodGenerators = { hunters:{ generate:4, deathRate:3 },
+                           gathers:{ generate:2, deathRate:1 } }
     var dying = false;
         dead = false;
 
     // interface functions
-    function hunt(){
-      gameData.food = gameData.food + Math.floor(gameData.people/2);
+    //// resources
+    // function addFoodGenerator(generator){
+    //   if ( gameData.idle > 0){
+    //     generator.count += 1;
+    //     gameData.idle--;
+    //   }
+    // }
+    function addHunter(){
+      if (gameData.people.ide > 0) {
+        console.log("beep");
+        gameData.people.hunters = 1;
+        gameData.people.idle--;
+      }
     }
 
-    function build(){
+    function addGather(){
+      if (gameData.people.ide > 0) {
+        if (hunters in gameData.people){
+          gameData.people.gathers++;
+          gameData.people.idle--;
+        } else {
+          gameData.people.gathers = 1;
+          gameData.people.idle--;
+        }
+      }
+    }
+    //// gameData
+    function buildHouse(){
       gameData.houses++;
     }
 
-    function gather(){
-      gameData.food = gameData.food + Math.floor(gameData.people/4);
+    function countPeople(){
+      let totalPeople = 0;
+      for (let key in gameData.people){
+        totalPeople += gameData.people[key];
+      }
+      return totalPeople;
     }
 
-    function updateResources(){
+
+    function gameTick(){
+      let totalPeople = countPeople();
+      // Reset dying flag
+      dying = false;
       // If there is space, increase the number of people
       if (Math.floor(gameData.people/2) < gameData.houses && gameData.food > gameData.people){
-        gameData.people++;
+        gameData.idle++;
       }
-
+      // Send out hunter/gathers
+      for (let key in foodGenerators){
+        if (key in gameData.people){
+          if (gameData.people[key] > 0){
+            gameData.food += gameData.people[key] * foodGenerators[key].generate;
+            if (Math.random() * 10 < foodGenerators[key].deathRate){
+              gameData.people[key].count--;
+              totalPeople--;
+              dying = true;
+            }
+          }
+        }
+      }
       // If there isn't enough food people start to die
+      gameData.food = gameData.food - totalPeople;
       if ( gameData.food <= 0 ){
         gameData.food = 0;
+        // One random person dies per tick while there isn't enough food
+        let peopleKeys = Object.keys(gameData.people);
+        let randomkey = peopleKeys[Math.floor(Math.random() * peopleKeys.length)];
+        gameData.people[randomkey]--
+        totalPeople--;
         dying = true;
-      } else {
-        // Each person consumers 1 food
-        gameData.food = gameData.food - gameData.people;
-        dying = false;
       }
-      // One person dies per tick while dying is true
+
+      // Check if everyone is dead
       if ( dying == true ) {
-        gameData.people -= Math.floor(gameData.people*0.1) + 1;
-        if (gameData.people <= 0 ){
+        if (totalPeople <= 0 ){
           dead = true;
-          gameData.people = 0
           clearInterval(gameTimer);
         }
       }
@@ -82,9 +128,15 @@
       ctx.clearRect(0, 0, 800, 400);
       ctx.font = "20px Arial";
       ctx.textAlign = "left";
-      ctx.fillText("Food: " + gameData.food, 50, 50);
-      ctx.fillText("Houses: " + gameData.houses, 50, 75);
-      ctx.fillText("People: " + gameData.people, 50, 100);
+      ctx.fillText("Food: " + gameData.food, 50, 25);
+      let totalPeople = 0;
+      y = 75
+      for (let key in gameData.people){
+        ctx.fillText(key + ": " + gameData.people[key], 50, y);
+        totalPeople += gameData.people[key];
+        y += 25;
+      }
+      ctx.fillText("People: " + totalPeople, 50, 50);
       if (dead == true){
         ctx.textAlign = "center";
         ctx.font = "30px Arial";
@@ -97,9 +149,9 @@
 
     // Hit boxes
     elements.push(
-      { top: 400, left: 150, bottom: 500, right: 250, msg_text: "Hunt", int_function:hunt },
-      { top: 400, left: 350, bottom: 500, right: 450, msg_text: "Build", int_function:build },
-      { top: 400, left: 550, bottom: 500, right: 650, msg_text: "Gather", int_function:gather }
+      { top: 400, left: 150, bottom: 500, right: 250, msg_text: "Hunt", int_function:addHunter },
+      { top: 400, left: 350, bottom: 500, right: 450, msg_text: "Build", int_function:buildHouse },
+      { top: 400, left: 550, bottom: 500, right: 650, msg_text: "Gather", int_function:addGather }
     )
 
     // Draw hit boxes
@@ -115,7 +167,7 @@
 
     ctx.stroke();
     draw_information();
-    var gameTimer = setInterval(updateResources, 1000);
+    var gameTimer = setInterval(gameTick, 1000);
 
   </script>
 
