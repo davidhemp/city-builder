@@ -33,10 +33,11 @@
     canvas.addEventListener('click', click_event, false);
 
     // Game data
-    var gameData = { food:10, people:{ "idle": 2 }, shelter: {} };
-    var foodGenerators = { "hunters":{ generate:4, deathRate:3 },
-                           "gathers":{ generate:2, deathRate:1 } }
-    var jobTypes = {"builders": { generate:1, deathRate:0.1 }}
+    var gameData = { "food":10, people:{ "idle": 2 }, shelter: {} };
+    var worldData = {"animals":100, "nuts/berries":100}
+    var jobTypes = {"hunters":{ source:"animals", output:"food", generate:4, deathRate:3 },
+                     "gathers":{ source:"nuts/berries", output:"food", generate:2, deathRate:1 },
+                     "builders": { source:"", output:"", generate:1, deathRate:0.1 }}
     var shelterTypes = {"huts": {sleeps:2} }
     var dying = false;
         dead = false;
@@ -106,12 +107,12 @@
       //Reset dying flag for this tick.
       dying = false;
       // Send out hunter/gathers
-      for (let key in foodGenerators){
-        if (key in gameData.people){
-          if (gameData.people[key] > 0){
-            gameData.food += gameData.people[key] * foodGenerators[key].generate;
-            if (Math.random() * 10 < foodGenerators[key].deathRate){
-              gameData.people[key]--;
+      for (let job in jobTypes){
+        if (job in gameData.people){
+          if (gameData.people[job] > 0){
+            gameData[jobTypes[job].output] += gameData.people[job] * jobTypes[job].generate;
+            if (Math.random() * 10 < jobTypes[job].deathRate){
+              gameData.people[job]--;
               totalPeople--;
               dying = true;
             }
