@@ -33,21 +33,14 @@
     canvas.addEventListener('click', click_event, false);
 
     // Game data
-    var gameData = { food:100, people:{ "idle": 2 }, shelter: {} };
+    var gameData = { food:10, people:{ "idle": 2 }, shelter: {} };
     var foodGenerators = { "hunters":{ generate:4, deathRate:3 },
                            "gathers":{ generate:2, deathRate:1 } }
-    var shelterTypes = {"hut": {sleeps:2} }
+    var jobTypes = {"builders": { generate:1, deathRate:0.1 }}
+    var shelterTypes = {"huts": {sleeps:2} }
     var dying = false;
         dead = false;
 
-    // interface functions
-    //// resources
-    // function addFoodGenerator(generator){
-    //   if ( gameData.idle > 0){
-    //     generator.count += 1;
-    //     gameData.idle--;
-    //   }
-    // }
     function addFoodGenerator(generator){
       if (gameData.people.idle > 0) {
         if (generator in gameData.people){
@@ -60,19 +53,36 @@
       }
     }
 
+    function addWorker(jobType){
+      if (gameData.people.idle > 0) {
+        if (jobType in gameData.people){
+          gameData.people[jobType]++;
+          gameData.people.idle--;
+        } else {
+          gameData.people[jobType] = 1;
+          gameData.people.idle--;
+        }
+      }
+    }
     //// gameData
     function buildshelter(shelterType){
-      if (shelterType in gameData.shelter){
-        gameData.shelter[shelterType]++;
-      } else {
-        gameData.shelter[shelterType] = 1;
+      if ("builders" in gameData.people){
+        if (shelterType in gameData.shelter){
+          gameData.shelter[shelterType] += gameData.people["builders"];
+        } else {
+          gameData.shelter[shelterType] = gameData.people["builders"];
+        }
       }
     }
 
     function countPeople(){
       let totalPeople = 0;
       for (let key in gameData.people){
-        totalPeople += gameData.people[key];
+        if (gameData.people[key] > 0 || key == "idle") {
+          totalPeople += gameData.people[key];
+        } else {
+           delete gameData.people[key];
+        }
       }
       return totalPeople;
     }
@@ -88,10 +98,11 @@
     function gameTick(){
       let totalPeople = countPeople();
       // let maxPeople = ;
-      if (totalPeople < countMaxPeople() ){
+      if (totalPeople < countMaxPeople() && dying == false){
       // If there is space and noone is dying, increase the number of people
         gameData.people["idle"]++;
       }
+
       //Reset dying flag for this tick.
       dying = false;
       // Send out hunter/gathers
@@ -160,8 +171,9 @@
     // Hit boxes
     elements.push(
       { top: 400, left: 150, bottom: 500, right: 250, msg_text: "Hunt", int_function:addFoodGenerator, variables:"hunters" },
-      { top: 400, left: 350, bottom: 500, right: 450, msg_text: "Build", int_function:buildshelter, variables:"hut" },
-      { top: 400, left: 550, bottom: 500, right: 650, msg_text: "Gather", int_function:addFoodGenerator, variables:"gathers" }
+      { top: 400, left: 350, bottom: 500, right: 450, msg_text: "Build", int_function:buildshelter, variables:"huts" },
+      { top: 400, left: 550, bottom: 500, right: 650, msg_text: "Gather", int_function:addFoodGenerator, variables:"gathers" },
+      { top: 500, left: 250, bottom: 600, right: 350, msg_text: "Builder", int_function:addWorker, variables:"builders" }
     )
 
     // Draw hit boxes
