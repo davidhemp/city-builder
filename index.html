@@ -23,7 +23,7 @@
 
       elements.forEach(function(element){
         if (y > element.top && y < element.bottom && x > element.left && x < element.right){
-          element.int_function();
+          element.int_function(element.variables);
           draw_information();
         }
       });
@@ -33,9 +33,10 @@
     canvas.addEventListener('click', click_event, false);
 
     // Game data
-    var gameData = { food:10, people:{ idle: 2 }, houses:0 };
-    var foodGenerators = { hunters:{ generate:4, deathRate:3 },
-                           gathers:{ generate:2, deathRate:1 } }
+    var gameData = { food:100, people:{ "idle": 2 }, shelter: {} };
+    var foodGenerators = { "hunters":{ generate:4, deathRate:3 },
+                           "gathers":{ generate:2, deathRate:1 } }
+    var shelterTypes = {"hut": {sleeps:2} }
     var dying = false;
         dead = false;
 
@@ -47,28 +48,25 @@
     //     gameData.idle--;
     //   }
     // }
-    function addHunter(){
-      if (gameData.people.ide > 0) {
-        console.log("beep");
-        gameData.people.hunters = 1;
-        gameData.people.idle--;
-      }
-    }
-
-    function addGather(){
-      if (gameData.people.ide > 0) {
-        if (hunters in gameData.people){
-          gameData.people.gathers++;
+    function addFoodGenerator(generator){
+      if (gameData.people.idle > 0) {
+        if (generator in gameData.people){
+          gameData.people[generator]++;
           gameData.people.idle--;
         } else {
-          gameData.people.gathers = 1;
+          gameData.people[generator] = 1;
           gameData.people.idle--;
         }
       }
     }
+
     //// gameData
-    function buildHouse(){
-      gameData.houses++;
+    function buildshelter(shelterType){
+      if (shelterType in gameData.shelter){
+        gameData.shelter[shelterType]++;
+      } else {
+        gameData.shelter[shelterType] = 1;
+      }
     }
 
     function countPeople(){
@@ -79,22 +77,30 @@
       return totalPeople;
     }
 
+    function countMaxPeople(){
+      let count = 0;
+      for (let key in gameData.shelter){
+        count += gameData.shelter[key] * shelterTypes[key].sleeps;
+      }
+      return count;
+    }
 
     function gameTick(){
       let totalPeople = countPeople();
-      // Reset dying flag
-      dying = false;
-      // If there is space, increase the number of people
-      if (Math.floor(gameData.people/2) < gameData.houses && gameData.food > gameData.people){
-        gameData.idle++;
+      // let maxPeople = ;
+      if (totalPeople < countMaxPeople() ){
+      // If there is space and noone is dying, increase the number of people
+        gameData.people["idle"]++;
       }
+      //Reset dying flag for this tick.
+      dying = false;
       // Send out hunter/gathers
       for (let key in foodGenerators){
         if (key in gameData.people){
           if (gameData.people[key] > 0){
             gameData.food += gameData.people[key] * foodGenerators[key].generate;
             if (Math.random() * 10 < foodGenerators[key].deathRate){
-              gameData.people[key].count--;
+              gameData.people[key]--;
               totalPeople--;
               dying = true;
             }
@@ -137,6 +143,10 @@
         y += 25;
       }
       ctx.fillText("People: " + totalPeople, 50, 50);
+      for (let key in gameData.shelter){
+        ctx.fillText(key + ": " + gameData.shelter[key], 50, y);
+        y += 25;
+      }
       if (dead == true){
         ctx.textAlign = "center";
         ctx.font = "30px Arial";
@@ -149,9 +159,9 @@
 
     // Hit boxes
     elements.push(
-      { top: 400, left: 150, bottom: 500, right: 250, msg_text: "Hunt", int_function:addHunter },
-      { top: 400, left: 350, bottom: 500, right: 450, msg_text: "Build", int_function:buildHouse },
-      { top: 400, left: 550, bottom: 500, right: 650, msg_text: "Gather", int_function:addGather }
+      { top: 400, left: 150, bottom: 500, right: 250, msg_text: "Hunt", int_function:addFoodGenerator, variables:"hunters" },
+      { top: 400, left: 350, bottom: 500, right: 450, msg_text: "Build", int_function:buildshelter, variables:"hut" },
+      { top: 400, left: 550, bottom: 500, right: 650, msg_text: "Gather", int_function:addFoodGenerator, variables:"gathers" }
     )
 
     // Draw hit boxes
